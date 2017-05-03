@@ -1,0 +1,41 @@
+{
+    "model": {
+      "input_file": "../inputs/driving_dataset.py",
+      "architecture_file" : "../architects/nvidia.py",
+      "objective_file" : "../objectives/udacity_objective.py",
+      "optimizer_file" : "../optimizer/generic_optimizer.py",
+      "evaluator_file" : "../evals/driving_dataset.py"
+    },
+    "data": {
+        "train_file": "driving_dataset/train.csv",
+        "val_file": "driving_dataset/val.csv",
+        "truncate_data": false
+    },
+    "logging": {
+        "display_iter": 5,
+        "eval_iter": 10,
+        "write_iter": 10,
+        "save_iter": 500,
+        "image_iter": 1e6
+    },
+    "arch": {},
+    "path": [],
+    "solver": {
+        "opt": "Adam",
+        "rnd_seed": 1,
+        "use_jitter": false,
+        "learning_rate_step": null,
+        "epsilon": 0.00001,
+        "learning_rate": 1e-4,
+        "weights": "",
+        "head_weights": [1.0, 0.1],
+        "max_steps": 14000
+    },
+    "clip_norm": 5.0,
+    "image_height": 66,
+    "image_width": 200,
+    "batch_size": 100,
+    "num_classes": 2,
+    "reg_strength": 0.001,
+    "keep_prob": 0.8
+}

@@ -1,0 +1,5 @@
+*.pyc
+DATA
+RUNS
+env
+.idea
