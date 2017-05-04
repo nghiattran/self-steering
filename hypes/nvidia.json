@@ -29,6 +29,7 @@
         "learning_rate": 1e-4,
         "max_steps": 14000
     },
+    "keep_prob": 0.5,
     "clip_norm": 1.0,
     "image_height": 66,
     "image_width": 200,

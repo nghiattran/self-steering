@@ -12,7 +12,7 @@ def decoder(hyp, logits, train):
 
 def loss(hypes, logits, target):
     error = tf.subtract(logits['output'], target)
-    rmse_loss = tf.sqrt(tf.losses.mean_squared_error(labels=target, predictions=logits['output']))
+    rmse_loss = tf.sqrt(tf.reduce_mean(tf.square(error)))
     loss = rmse_loss
 
     reg_loss_col = tf.GraphKeys.REGULARIZATION_LOSSES

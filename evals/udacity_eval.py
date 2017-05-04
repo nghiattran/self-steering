@@ -71,7 +71,7 @@ def run_test(hypes, image_pl, sess, output_node, eval_list, validation=True, lim
 
     preds = np.array(preds, dtype=np.float32)
 
-    error = targets - preds
+    error = np.abs(targets - preds)
     rmse = np.sqrt(np.mean(np.square(error)))
 
     eval_list.append(('%s   sum error' % stage, abs(np.sum(error))))
