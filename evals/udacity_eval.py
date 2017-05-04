@@ -3,6 +3,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+import random
 import time
 import pandas as pd
 import scipy as scp
@@ -33,7 +34,7 @@ def make_val_dir(hypes, validation=True):
     return val_dir
 
 
-def run_test(hypes, image_pl, sess, output_node, eval_list, validation=True, limit=-1):
+def run_test(hypes, image_pl, sess, output_node, eval_list, validation=True, limit=-1, shuffle=False):
     val_path = make_val_dir(hypes, validation)
     image_list = []
     stage = 'Val' if validation else 'Train'
@@ -50,6 +51,11 @@ def run_test(hypes, image_pl, sess, output_node, eval_list, validation=True, lim
     if limit > 0:
         files = files[:limit]
         targets = targets[:limit]
+
+    if shuffle:
+        c = list(zip(files, targets))
+        random.shuffle(c)
+        iles, targets = zip(*c)
 
     preds = []
     with open(os.path.join(val_path, 'interpolated.csv'), 'w') as f:
@@ -97,15 +103,15 @@ def run_test(hypes, image_pl, sess, output_node, eval_list, validation=True, lim
     plt.clf()
     start = np.min(np.minimum(targets, preds))
     end = np.max(np.maximum(targets, preds))
-    plt.scatter(targets, preds)
+    plt.scatter(targets, preds, s=10)
     plt.xlabel('Targets')
     plt.ylabel('Predictions')
-    plt.plot([start, end], [start, end])
+    plt.plot([start, end], [start, end], color='red')
     plt.savefig(plotfile)
 
     plotfile = os.path.join(val_path, 'predictions_vs_error_scatter_step_%d.png' % step)
     plt.clf()
-    plt.scatter(preds, error)
+    plt.scatter(preds, error, s=10)
     plt.xlabel('Predictions')
     plt.ylabel('Errors')
     plt.savefig(plotfile)
@@ -131,7 +137,8 @@ def evaluate(hypes, sess, image_pl, logits):
                                            output_node=output_node,
                                            eval_list=eval_list,
                                            validation=False,
-                                           limit=len(image_list))
+                                           limit=len(image_list),
+                                           shuffle=True)
 
     step = hypes.get('step', hypes['logging']['eval_iter'])
     hypes['step'] = step + hypes['logging']['eval_iter']
