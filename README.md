@@ -21,7 +21,7 @@ You can train your own model by using.
 $ python train.py --hypes path-to-your-hype
 ```
 
-See [train.py]() for more detail.
+See [train.py](https://github.com/nghiattran/self-steering/blob/master/train.py) for more detail.
 
 Check [Hypes](#hypes) to see all options or to create your own ones.
 
@@ -45,14 +45,13 @@ $ tv-analyze --logdir path-to-logdir
 
 ### 3. Submission
 
-To test your model, use `submission.py` to generate csv file. Format of this `csv` file would be similar
-ro [CH2_final_evaluation.csv]().
+To test your model, use `submission.py` to generate csv file. Format of this `csv` file would be similar to [CH2_final_evaluation.csv](https://github.com/nghiattran/self-steering/blob/master/CH2_final_evaluation.csv).
 
 ```bash
 $ python submission.py path-to-logdir path-image-folder
 ```
 
-See [submission.py]() for more detail.
+See [submission.py](https://github.com/nghiattran/self-steering/blob/master/submission.py) for more detail.
 
 ### 4. Visualization
 
@@ -62,7 +61,7 @@ Use `visualize.py` to create a demo video from `csv` files generated above.
 $ python visualize.py path-to-input-csv path-groundtruth-csv path-to-image-folder
 ```
 
-See [visualize.py]() for more detail.
+See [visualize.py](https://github.com/nghiattran/self-steering/blob/master/visualize.py) for more detail.
 
 ## Hypes
 
@@ -106,7 +105,7 @@ You can also create your own neural network architect by using layout in `archit
 ## Models
 
 * `nvidia`: inspired by [SullyChen](https://github.com/SullyChen/Autopilot-TensorFlow)'s implementation of Nvidia's paper
- [End to End Learning for Self-Driving Cars](https://arxiv.org/pdf/1604.07316.pdf)
+ [End to End Learning for Self-Driving Cars](https://arxiv.org/pdf/1604.07316.pdf) but our implementation runs way faster.
 
 ## Acknowledge
 
