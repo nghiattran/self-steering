@@ -47,10 +47,10 @@ def training(hypes, loss, global_step, learning_rate):
 
         if sol['opt'] == 'RMS':
             opt = tf.train.RMSPropOptimizer(learning_rate=learning_rate,
-                                            decay=0.9, epsilon=sol['epsilon'])
+                                            decay=0.9, epsilon=sol.get('epsilon', 1e-5))
         elif sol['opt'] == 'Adam':
             opt = tf.train.AdamOptimizer(learning_rate=learning_rate,
-                                         epsilon=sol['epsilon'])
+                                         epsilon=sol.get('epsilon', 1e-5))
         elif sol['opt'] == 'SGD':
             lr = learning_rate
             opt = tf.train.GradientDescentOptimizer(learning_rate=lr)
@@ -59,9 +59,10 @@ def training(hypes, loss, global_step, learning_rate):
 
         grads_and_vars = opt.compute_gradients(total_loss)
 
-        if hypes['clip_norm'] > 0:
+        clip_norm = hypes.get('clip_norm', -1)
+
+        if clip_norm > 0:
             grads, tvars = zip(*grads_and_vars)
-            clip_norm = hypes["clip_norm"]
             clipped_grads, norm = tf.clip_by_global_norm(grads, clip_norm)
             grads_and_vars = zip(clipped_grads, tvars)
 

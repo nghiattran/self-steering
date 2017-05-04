@@ -14,8 +14,7 @@ if __name__ == '__main__':
     data = content[1:]
     random.shuffle(data)
 
-    split = 500
-
+    split = int(len(data) // 10)
     train_data = data[split:]
     val_data = data[:split]
 

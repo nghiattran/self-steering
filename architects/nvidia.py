@@ -101,7 +101,14 @@ def inference(hypes, images, train=True):
         with tf.variable_scope('fc10'):
             # Output
             fc10_w, fc10_b = conv_weight_variable([10, 1])
-            output = tf.multiply(tf.atan(tf.matmul(h_fc9_drop, fc10_w) + fc10_b), 2)  # scale the atan output
+
+            final_step = hypes.get('final_step', 'atan')
+
+            if final_step == 'plain':
+
+                output = tf.matmul(h_fc9_drop, fc10_w) + fc10_b
+            else:
+                output = tf.multiply(tf.atan(tf.matmul(h_fc9_drop, fc10_w) + fc10_b), 2)
 
 
     return {

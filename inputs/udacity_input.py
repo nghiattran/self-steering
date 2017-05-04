@@ -7,10 +7,16 @@ import pandas as pd
 import numpy as np
 import scipy as scp
 import scipy.misc
+from skimage.color import rgb2yuv
 
 def load_image(path, hypes):
     img = scp.misc.imread(path)
-    img = scp.misc.imresize(img[-400:], size=(hypes["image_height"], hypes["image_width"]))
+    img = scp.misc.imresize(img[-hypes.get('crop', 400):], size=(hypes["image_height"], hypes["image_width"]))
+
+    colorspace = hypes.get('color_space', None)
+    if colorspace == 'yuv':
+        img = rgb2yuv(img)
+
     return img
 
 def load_csv(csv_file):

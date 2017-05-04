@@ -12,7 +12,6 @@ def conv_weight_variable(shape):
     global cnt
     cnt += 1
     initializer = tf.contrib.layers.xavier_initializer_conv2d()
-    # initializer = tf.random_uniform_initializer(-0.1, 0.1)
     w = tf.get_variable('weight_%d' % (cnt), shape=shape, initializer=initializer)
 
     initializer = tf.constant(0.1, shape=[shape[-1]])
@@ -34,33 +33,48 @@ def inference(hypes, images, train=True):
     # If val, set to 1.0 which mean no dropout
     keep_prob = hypes.get('keep_prob', 1.0) if train else 1.0
 
-    regularizer = tf.contrib.layers.l2_regularizer(hypes.get('regularizer_strength', 0.5))
+    regularizer = tf.contrib.layers.l2_regularizer(hypes.get('reg_strength', 0.1))
     with tf.variable_scope('network', regularizer=regularizer):
         with tf.name_scope("conv1"):
             # first convolutional layer
             conv1_w, conv1_b = conv_weight_variable([5, 5, 3, 24])
             h_conv1 = tf.nn.relu(conv2d(images, conv1_w, 2) + conv1_b)
+            h_conv1 = tf.contrib.layers.batch_norm(h_conv1,
+                                                   is_training=train,
+                                                   trainable=True)
 
         with tf.name_scope("conv2"):
             # second convolutional layer
             conv2_w, conv2_b = conv_weight_variable([5, 5, 24, 36])
             h_conv2 = tf.nn.relu(conv2d(h_conv1, conv2_w, 2) + conv2_b)
+            h_conv2 = tf.contrib.layers.batch_norm(h_conv2,
+                                                   is_training=train,
+                                                   trainable=True)
 
         with tf.name_scope("conv3"):
             # third convolutional layer
             conv3_w, conv3_b = conv_weight_variable([5, 5, 36, 48])
             h_conv3 = tf.nn.relu(conv2d(h_conv2, conv3_w, 2) + conv3_b)
+            h_conv3 = tf.contrib.layers.batch_norm(h_conv3,
+                                                   is_training=train,
+                                                   trainable=True)
 
         with tf.name_scope("conv4"):
             # fourth convolutional layer
             conv4_w, conv4_b = conv_weight_variable([3, 3, 48, 64])
             h_conv4 = tf.nn.relu(conv2d(h_conv3, conv4_w, 1) + conv4_b)
+            h_conv4 = tf.contrib.layers.batch_norm(h_conv4,
+                                                   is_training=train,
+                                                   trainable=True)
 
         with tf.name_scope("conv5"):
             # fifth convolutional layer
             conv5_w, conv5_b = conv_weight_variable([3, 3, 64, 64])
 
             h_conv5 = tf.nn.relu(conv2d(h_conv4, conv5_w, 1) + conv5_b)
+            h_conv5 = tf.contrib.layers.batch_norm(h_conv5,
+                                                   is_training=train,
+                                                   trainable=True)
 
         with tf.name_scope("fc6"):
             # FCL 1
@@ -94,7 +108,8 @@ def inference(hypes, images, train=True):
         with tf.name_scope('fc10'):
             # Output
             fc10_w, fc10_b = weight_variable([10, 1])
-            output = tf.multiply(tf.atan(tf.matmul(h_fc9_drop, fc10_w) + fc10_b), 2)
+            # output = tf.multiply(tf.atan(tf.matmul(h_fc9_drop, fc10_w) + fc10_b), 2)
+            output = tf.matmul(h_fc9_drop, fc10_w) + fc10_b
 
     return {
         'output': output

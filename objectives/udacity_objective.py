@@ -13,8 +13,6 @@ def decoder(hyp, logits, train):
 def loss(hypes, logits, target):
     error = tf.subtract(logits['output'], target)
     rmse_loss = tf.sqrt(tf.losses.mean_squared_error(labels=target, predictions=logits['output']))
-    _, var_loss = tf.nn.moments(error, axes=[0])
-    rmsd_loss = tf.reduce_mean(tf.sqrt(var_loss))
     loss = rmse_loss
 
     reg_loss_col = tf.GraphKeys.REGULARIZATION_LOSSES
@@ -27,8 +25,7 @@ def loss(hypes, logits, target):
 
     losses = {
         'total_loss': total_loss,
-        'mse_loss': rmse_loss,
-        'rmsd_loss': rmsd_loss,
+        'rmse_loss': rmse_loss,
         'weight_loss': weight_loss,
         'error': tf.abs(tf.reduce_sum(error))
     }
@@ -39,8 +36,7 @@ def loss(hypes, logits, target):
 def evaluation(hyp, images, target, logits, losses, global_step):
     eval_list = []
     eval_list.append(('Total loss', losses['total_loss']))
-    eval_list.append(('RMSE loss', losses['mse_loss']))
-    eval_list.append(('RMSD loss', losses['rmsd_loss']))
+    eval_list.append(('RMSE loss', losses['rmse_loss']))
     eval_list.append(('Error', losses['error']))
     eval_list.append(('Weights', losses['weight_loss']))
     return eval_list

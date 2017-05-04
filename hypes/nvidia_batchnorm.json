@@ -1,0 +1,38 @@
+{
+    "model": {
+      "input_file": "../inputs/udacity_input.py",
+      "architecture_file" : "../architects/nvidia_batchnorm.py",
+      "objective_file" : "../objectives/udacity_objective.py",
+      "optimizer_file" : "../optimizer/generic_optimizer.py",
+      "evaluator_file" : "../evals/udacity_eval.py"
+    },
+    "data": {
+        "train_file": "train/train.csv",
+        "val_file": "train/val.csv",
+        "truncate_data": false
+    },
+    "logging": {
+        "display_iter": 5,
+        "eval_iter": 50,
+        "write_iter": 50,
+        "save_iter": 50,
+        "image_iter": 1e6
+    },
+    "arch": {},
+    "path": [],
+    "solver": {
+        "opt": "Adam",
+        "rnd_seed": 1,
+        "use_jitter": false,
+        "learning_rate_step": null,
+        "epsilon": 0.00001,
+        "learning_rate": 1e-4,
+        "max_steps": 14000
+    },
+    "clip_norm": 1.0,
+    "image_height": 66,
+    "image_width": 200,
+    "batch_size": 1000,
+    "num_classes": 2,
+    "reg_strength": 0.001
+}

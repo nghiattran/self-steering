@@ -1,4 +1,5 @@
 """Trains, evaluates and saves the TensorDetect model."""
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -9,14 +10,9 @@ import os
 import sys
 
 # configure logging
-if 'TV_IS_DEV' in os.environ and os.environ['TV_IS_DEV']:
-    logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
-                        level=logging.INFO,
-                        stream=sys.stdout)
-else:
-    logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
-                        level=logging.INFO,
-                        stream=sys.stdout)
+logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
+                    level=logging.INFO,
+                    stream=sys.stdout)
 
 # https://github.com/tensorflow/tensorflow/issues/2034#issuecomment-220820070
 import numpy as np
