@@ -55,7 +55,7 @@ def run_test(hypes, image_pl, sess, output_node, eval_list, validation=True, lim
     if shuffle:
         c = list(zip(files, targets))
         random.shuffle(c)
-        iles, targets = zip(*c)
+        files, targets = zip(*c)
 
     preds = []
     with open(os.path.join(val_path, 'interpolated.csv'), 'w') as f:
@@ -109,10 +109,10 @@ def run_test(hypes, image_pl, sess, output_node, eval_list, validation=True, lim
     plt.plot([start, end], [start, end], color='red')
     plt.savefig(plotfile)
 
-    plotfile = os.path.join(val_path, 'predictions_vs_error_scatter_step_%d.png' % step)
+    plotfile = os.path.join(val_path, 'angles_vs_error_scatter_step_%d.png' % step)
     plt.clf()
-    plt.scatter(preds, error, s=10)
-    plt.xlabel('Predictions')
+    plt.scatter(targets, error, s=10)
+    plt.xlabel('Angle')
     plt.ylabel('Errors')
     plt.savefig(plotfile)
 
