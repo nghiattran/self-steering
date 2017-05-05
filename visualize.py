@@ -32,6 +32,7 @@ import logging
 import os
 import time
 import scipy
+import sys
 from PIL import ImageFont
 from PIL import Image
 from PIL import ImageDraw
@@ -47,6 +48,9 @@ import pylab
 import imageio
 import matplotlib.patches as mpatches
 
+logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
+                        level=logging.INFO,
+                        stream=sys.stdout)
 
 # ***** get perspective transform for images *****
 from skimage import transform as tf
