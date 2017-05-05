@@ -20,6 +20,10 @@ def loss(hypes, logits, target):
 
     total_loss = weight_loss + loss
 
+    tf.summary.scalar('loss', loss)
+    tf.summary.scalar('weight_loss', weight_loss)
+    tf.summary.scalar('total_loss', total_loss)
+
     losses = {
         'total_loss': total_loss,
         'rmse_loss': rmse_loss,

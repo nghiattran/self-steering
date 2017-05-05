@@ -51,6 +51,13 @@ def start_enqueuing_threads(hypes, q, phase, sess):
     x_in = tf.placeholder(tf.float32)
     angle_in = tf.placeholder(tf.float32)
 
+    preprocesses = hypes.get('preprocesses', [])
+    for p in preprocesses:
+        if p == 'batchnorm':
+            pass
+        else:
+            raise ValueError('Preprocess type %s is unsupported' % (str(p)))
+
     # Creating Enqueue OP
     enqueue_op = q.enqueue((x_in, angle_in))
 
