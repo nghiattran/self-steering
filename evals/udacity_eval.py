@@ -13,9 +13,18 @@ import matplotlib.pyplot as plt
 
 BINS = np.linspace(-2, 2, 100)
 
-def load_image(path, hypes):
+def load_image(path, hypes, cb=None):
     img = scp.misc.imread(path)
+
+    if callable(cb):
+        cb(img, hypes)
+
+    crop = hypes.get('crop', 400)
+    if crop > 0:
+        img = img[-crop:]
+
     img = scp.misc.imresize(img, size=(hypes["image_height"], hypes["image_width"]))
+
     return img
 
 
@@ -47,15 +56,18 @@ def run_test(hypes, image_pl, sess, output_node, eval_list, validation=True, lim
     base_path = os.path.realpath(os.path.dirname(val_csv))
     data = load_csv(val_csv)
     files = data['filename'][1:].tolist()
-    targets = np.array(data['angle'][1:].tolist(), dtype=np.float32)
-    if limit > 0:
-        files = files[:limit]
-        targets = targets[:limit]
+    targets = data['angle'][1:].tolist()
 
     if shuffle:
         c = list(zip(files, targets))
         random.shuffle(c)
         files, targets = zip(*c)
+
+    if limit > 0:
+        files = files[:limit]
+        targets = targets[:limit]
+
+    targets = np.array(targets, dtype=np.float32)
 
     preds = []
     with open(os.path.join(val_path, 'interpolated.csv'), 'w') as f:
@@ -73,19 +85,18 @@ def run_test(hypes, image_pl, sess, output_node, eval_list, validation=True, lim
 
             filename = os.path.basename(files[i])
             frame_id = os.path.splitext(filename)[0]
-            f.write('%s,%f,%f,%f\n' % (frame_id, pred[0], targets[i], targets[i] - pred[0]))
+            f.write('%s,%f,%f,%f\n' % (frame_id, pred[0][0], targets[i], targets[i] - pred[0][0]))
 
     preds = np.array(preds, dtype=np.float32)
 
     error = np.abs(targets - preds)
-    rmse = np.sqrt(np.mean(np.square(error)))
+    rmse = np.mean(np.square(error)) ** 0.5
 
     eval_list.append(('%s   sum error' % stage, abs(np.sum(error))))
     eval_list.append(('%s   max error' % stage, np.max(error)))
     eval_list.append(('%s   mean error' % stage, np.mean(error)))
     eval_list.append(('%s   min error' % stage, np.min(error)))
     eval_list.append(('%s   root-mean-square error' % stage, rmse))
-    eval_list.append(('%s   root-mean-square variance' % stage, np.var(error)))
 
     # Create graphs
     step = hypes.get('step', hypes['logging']['eval_iter'])
@@ -101,8 +112,8 @@ def run_test(hypes, image_pl, sess, output_node, eval_list, validation=True, lim
 
     plotfile = os.path.join(val_path, 'targets_vs_predictions_scatter_step_%d.png' % step)
     plt.clf()
-    start = np.min(np.minimum(targets, preds))
-    end = np.max(np.maximum(targets, preds))
+    start = - np.pi
+    end = np.pi
     plt.scatter(targets, preds, s=10)
     plt.xlabel('Targets')
     plt.ylabel('Predictions')
@@ -123,22 +134,28 @@ def evaluate(hypes, sess, image_pl, logits):
     eval_list = []
     output_node = logits['output']
 
+    limit = hypes['batch_size'] if hypes['data'].get('truncated', False) else -1
+    shuffle = False if hypes['data'].get('truncated', False) else True
     # Run test on valuation set
-    eval_list, image_list, _ = run_test(hypes=hypes,
-                                     sess=sess,
-                                     image_pl=image_pl,
-                                     output_node=output_node,
-                                     eval_list=eval_list)
+    res = run_test(hypes=hypes,
+                   sess=sess,
+                   image_pl=image_pl,
+                   output_node=output_node,
+                   eval_list=eval_list,
+                   limit=limit,
+                   shuffle=shuffle)
+    eval_list, image_list, _ = res
 
-    # Run test on valuation set
-    eval_list, image_list, feed = run_test(hypes=hypes,
-                                           sess=sess,
-                                           image_pl=image_pl,
-                                           output_node=output_node,
-                                           eval_list=eval_list,
-                                           validation=False,
-                                           limit=len(image_list),
-                                           shuffle=True)
+    # Run test on training set
+    res = run_test(hypes=hypes,
+                   sess=sess,
+                   image_pl=image_pl,
+                   output_node=output_node,
+                   eval_list=eval_list,
+                   validation=False,
+                   limit=len(image_list),
+                   shuffle=shuffle)
+    eval_list, image_list, feed = res
 
     step = hypes.get('step', hypes['logging']['eval_iter'])
     hypes['step'] = step + hypes['logging']['eval_iter']

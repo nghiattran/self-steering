@@ -10,8 +10,8 @@ def decoder(hyp, logits, train):
     return logits
 
 
-def loss(hypes, logits, target):
-    error = tf.subtract(logits['output'], target)
+def loss(hypes, logits, targets):
+    error = tf.subtract(targets, logits['output'])
     rmse_loss = tf.sqrt(tf.reduce_mean(tf.square(error)))
     loss = rmse_loss
 
@@ -26,9 +26,9 @@ def loss(hypes, logits, target):
 
     losses = {
         'total_loss': total_loss,
-        'rmse_loss': rmse_loss,
+        'mse_loss': rmse_loss,
         'weight_loss': weight_loss,
-        'error': tf.abs(tf.reduce_sum(error))
+        'error': tf.reduce_sum(tf.abs(error))
     }
 
     return losses
@@ -37,7 +37,7 @@ def loss(hypes, logits, target):
 def evaluation(hyp, images, target, logits, losses, global_step):
     eval_list = []
     eval_list.append(('Total loss', losses['total_loss']))
-    eval_list.append(('RMSE loss', losses['rmse_loss']))
+    eval_list.append(('RMSE loss', losses['mse_loss']))
     eval_list.append(('Error', losses['error']))
     eval_list.append(('Weights', losses['weight_loss']))
     return eval_list

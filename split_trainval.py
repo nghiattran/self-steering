@@ -1,6 +1,8 @@
 import os
 import random
 
+import scipy
+
 if __name__ == '__main__':
     filepath = 'DATA/train/interpolated.csv'
     basepath = os.path.realpath(os.path.dirname(filepath))
@@ -13,15 +15,3 @@ if __name__ == '__main__':
     header = content[0]
     data = content[1:]
     random.shuffle(data)
-
-    split = int(len(data) // 10)
-    train_data = data[split:]
-    val_data = data[:split]
-
-    with open(train_csv, 'w') as f:
-        f.write(header)
-        f.write(''.join(train_data))
-
-    with open(val_csv, 'w') as f:
-        f.write(header)
-        f.write(''.join(val_data))

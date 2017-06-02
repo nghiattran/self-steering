@@ -10,8 +10,7 @@ summary = {}
 
 def conv_weight_variable(shape):
     global cnt
-    initializer = tf.contrib.layers.xavier_initializer_conv2d()
-    w = tf.get_variable('weight_%d' % (cnt), shape=shape, initializer=initializer)
+    w = tf.get_variable('weight_%d' % (cnt), shape=shape)
 
     initializer = tf.constant(0.1, shape=[shape[-1]])
     b = tf.get_variable('bias_%d' % (cnt), initializer=initializer)
@@ -38,13 +37,23 @@ def inference(hypes, images, train=True):
     global cnt
     cnt = 0
 
+    images = images / 255.0 - 0.5
+
+    initializer_type = hypes.get('initializer', 'xavier')
+    if initializer_type == 'truncated_normal':
+        initializer = tf.truncated_normal_initializer(stddev=0.1)
+    elif initializer_type == 'random_uniform':
+        initializer = tf.random_uniform_initializer(minval=-0.1, maxval=0.1)
+    else:
+        initializer = tf.contrib.layers.xavier_initializer_conv2d()
+
     # If train, set keep_prob to keep_prob value in hype
     # If val, set to 1.0 which mean no dropout
     keep_prob = hypes.get('keep_prob', 1.0) if train else 1.0
 
     regularizer = tf.contrib.layers.l2_regularizer(hypes.get('reg_strength', 0.1))
 
-    with tf.variable_scope('network', regularizer=regularizer):
+    with tf.variable_scope('network', regularizer=regularizer, initializer=initializer):
         with tf.variable_scope("conv1"):
             # first convolutional layer
             conv1_stride = 2
@@ -105,7 +114,6 @@ def inference(hypes, images, train=True):
             final_step = hypes.get('final_step', 'atan')
 
             if final_step == 'plain':
-
                 output = tf.matmul(h_fc9_drop, fc10_w) + fc10_b
             else:
                 output = tf.multiply(tf.atan(tf.matmul(h_fc9_drop, fc10_w) + fc10_b), 2)

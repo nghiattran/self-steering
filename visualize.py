@@ -138,7 +138,6 @@ def load_data(filepath):
     return files, np.array(angles, dtype=np.float32)
 
 
-# ***** main loop *****
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Path viewer')
     parser.add_argument('input', type=str, help='Path to prediction file.')
