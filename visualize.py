@@ -185,6 +185,9 @@ if __name__ == "__main__":
     # Run through all images
     with imageio.get_writer(save_file, mode='I', fps=24) as writer:
         for i, frame_id in enumerate(pred_ids):
+            sys.stdout.write('\r>> Processubg %d/%d images' % (i + 1, len(pred_ids)))
+            sys.stdout.flush()
+
             filepath = os.path.join(args.basepath, str(frame_id) + '.jpg')
             img = scipy.misc.imread(filepath)
 

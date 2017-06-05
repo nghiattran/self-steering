@@ -98,7 +98,10 @@ def main():
     start = time.time()
     with open(save_file, 'w') as f:
         f.write('frame_id,steering_angle\n')
-        for file in files:
+        for i, file in enumerate(files):
+            sys.stdout.write('\r>> Processubg %d/%d images' % (i + 1, len(files)))
+            sys.stdout.flush()
+
             filepath = os.path.join(args.test_folder, file)
 
             img = load_image(path=filepath, hypes=hypes)

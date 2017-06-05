@@ -87,17 +87,10 @@ def load_data(interpolate_csv, hypes, jitter=False, random_shuffel=True):
 
 def start_enqueuing_threads(hypes, q, phase, sess):
     """Start enqueuing threads."""
-    print('hi\n\n\n\n')
+
     # Creating Placeholder for the Queue
     x_in = tf.placeholder(tf.float32)
     angle_in = tf.placeholder(tf.float32)
-
-    preprocesses = hypes.get('preprocesses', [])
-    for p in preprocesses:
-        if p == 'batchnorm':
-            pass
-        else:
-            raise ValueError('Preprocess type %s is unsupported' % (str(p)))
 
     # Creating Enqueue OP
     enqueue_op = q.enqueue((x_in, angle_in))

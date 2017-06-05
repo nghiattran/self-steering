@@ -3,3 +3,8 @@ DATA
 RUNS
 env
 .idea
+
+*.mp4
+*.csv
+TFRecords
+REPORT
