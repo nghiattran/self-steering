@@ -1,0 +1,38 @@
+{
+    "model": {
+        "dataset_file": "../dataset.py",
+        "architecture_file" : "architect.py",
+        "objective_file" : "../objective.py",
+        "optimizer_file" : "../optimizer.py",
+        "evaluator_file" : "../evaluator.py"
+    },
+    "data": {
+        "train_file": "../../TFRecords/udacity/train.tfrecord",
+        "val_file": "../../TFRecords/udacity/val.tfrecord",
+        "truncated": false
+    },
+    "logging": {
+        "display_iter": 5,
+        "eval_iter": 50,
+        "save_iter": 100
+    },
+    "solver": {
+        "opt": "Adam",
+        "rnd_seed": 1,
+        "use_jitter": false,
+        "learning_rate_step": null,
+        "epsilon": 1e-5,
+        "learning_rate": 1e-4,
+        "max_steps": 14000,
+        "batch_size": 1024
+    },
+    "clip_norm": 1,
+    "image_height": 66,
+    "image_width": 200,
+    "initializer": "xavier",
+    "reg_strength": 1e-3,
+    "color_space": null,
+    "crop": 400,
+    "preprocess": [],
+    "augment_level": 2
+}
