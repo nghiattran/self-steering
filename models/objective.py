@@ -37,4 +37,6 @@ class Objective(ObjectiveBase):
         eval_list.append(('RMSE loss', losses['mse_loss']))
         eval_list.append(('Error', losses['error']))
         eval_list.append(('Weights', losses['weight_loss']))
+
+
         return eval_list

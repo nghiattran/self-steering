@@ -1,8 +1,14 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
+import argparse
 import os
 import sys
+
 import tensorflow as tf
+
 from data_utils import int64_feature, float_feature, bytes_feature
-import argparse
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Convert data to tfRecords.')
@@ -39,6 +45,7 @@ if __name__ == '__main__':
 
             frame_id, _ = os.path.splitext(os.path.basename(filepath))
             frame_id = int(frame_id)
+
             features = tf.train.Features(feature={
                 'steering_angle': float_feature(angle),
                 'frame_id': int64_feature(frame_id),

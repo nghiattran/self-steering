@@ -22,7 +22,7 @@
         "use_jitter": false,
         "learning_rate_step": null,
         "epsilon": 1e-5,
-        "learning_rate": 1e-4,
+        "learning_rate": 1e-3,
         "max_steps": 14000,
         "batch_size": 1024,
         "num_threads": 8
@@ -31,7 +31,7 @@
     "clip_norm": -1,
     "image_height": 66,
     "image_width": 200,
-    "initializer": "truncated_normal",
+    "initializer": "xavier",
     "reg_strength": 1e-3,
     "color_space": null,
     "crop": 400,

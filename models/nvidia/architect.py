@@ -38,6 +38,8 @@ class Architect(ArchitectBase):
         global cnt
         cnt = 0
 
+        is_training = phase == 'train'
+
         initializer_type = hypes.get('initializer', 'xavier')
         if initializer_type == 'truncated_normal':
             initializer = tf.truncated_normal_initializer(stddev=0.1)
@@ -46,7 +48,10 @@ class Architect(ArchitectBase):
         else:
             initializer = tf.contrib.layers.xavier_initializer_conv2d()
 
-        regularizer = tf.contrib.layers.l2_regularizer(hypes.get('reg_strength', 0.1))
+        reg_strength = hypes.get('reg_strength', 0.1)
+        regularizer = None
+        if reg_strength > 0:
+            regularizer = tf.contrib.layers.l2_regularizer(reg_strength)
 
         with tf.name_scope('Preprocess'):
             input = tf.cast(input, tf.float32)
@@ -56,10 +61,10 @@ class Architect(ArchitectBase):
             images = tf.subtract(images, 0.5)
             images = tf.multiply(images, 2.0)
 
-        with tf.variable_scope('network', regularizer=regularizer, initializer=initializer):
+        with tf.variable_scope('Network', regularizer=regularizer, initializer=initializer):
             # If train, set keep_prob to keep_prob value in hype
             # If val, set to 1.0 which mean no dropout
-            keep_prob = hypes.get('keep_prob', 1.0) if phase == 'train' else 1.0
+            keep_prob = hypes.get('keep_prob', 1.0) if is_training else 1.0
 
             with tf.name_scope("conv1"):
                 # first convolutional layer
@@ -93,31 +98,35 @@ class Architect(ArchitectBase):
 
                 h_conv5_flat = tf.reshape(h_conv5, [-1, 1152])
                 h_fc6 = tf.nn.relu(tf.matmul(h_conv5_flat, fc6_w) + fc6_b)
+
                 h_fc6_drop = tf.nn.dropout(h_fc6, keep_prob=keep_prob)
 
             with tf.name_scope("fc7"):
                 # FCL 2
                 fc7_w, f7_b = weight_variable([1164, 100])
                 h_fc7 = tf.nn.relu(tf.matmul(h_fc6_drop, fc7_w) + f7_b)
+
                 h_fc7_drop = tf.nn.dropout(h_fc7, keep_prob=keep_prob)
 
             with tf.name_scope("fc8"):
                 # FCL 3
                 fc8_w, f8_b = weight_variable([100, 50])
                 h_fc8 = tf.nn.relu(tf.matmul(h_fc7_drop, fc8_w) + f8_b)
+
                 h_fc8_drop = tf.nn.dropout(h_fc8, keep_prob=keep_prob)
 
             with tf.name_scope("fc9"):
                 # FCL 3
                 fc9_w, f9_b = weight_variable([50, 10])
                 h_fc9 = tf.nn.relu(tf.matmul(h_fc8_drop, fc9_w) + f9_b)
+
                 h_fc9_drop = tf.nn.dropout(h_fc9, keep_prob=keep_prob)
 
             with tf.name_scope('fc10'):
                 # Output
                 fc10_w, fc10_b = weight_variable([10, 1])
 
-                output = tf.matmul(h_fc9_drop, fc10_w) + fc10_b
+                output = tf.multiply(tf.atan(tf.matmul(h_fc9_drop, fc10_w) + fc10_b), 2, name='y')
 
         return {
             'output': output

@@ -29,13 +29,12 @@ def run_test(hypes, image_pl, sess, output_node, eval_list, dataset, validation=
     val_path = make_val_dir(hypes, validation)
     stage = 'Val' if validation else 'Train'
 
-    dataset.shuffle()
-    dataset.reset_cursor()
-
     targets = []
     preds = []
 
-    with open(os.path.join(val_path, 'interpolated.csv'), 'w') as f:
+    step = hypes.get('step', hypes['logging']['eval_iter'])
+
+    with open(os.path.join(val_path, 'interpolated_step_%d.csv' % step), 'w') as f:
         f.write('frame_id,prediction,steering_angle, difference\n')
         for i in range(limit):
             img, angle, frame_id = dataset.next_batch_num(1)
@@ -62,11 +61,9 @@ def run_test(hypes, image_pl, sess, output_node, eval_list, dataset, validation=
     eval_list.append(('%s   min error' % stage, np.min(error)))
     eval_list.append(('%s   root-mean-square error' % stage, rmse))
 
-    # Create graphs
-    step = hypes.get('step', hypes['logging']['eval_iter'])
-
     plotfile = os.path.join(val_path, 'targets_vs_predictions_histogram_step_%d.png' % step)
     plt.clf()
+    plt.title('Step %d' % step, loc='left')
     plt.xlabel('Steering angle')
     plt.ylabel('Frequency')
     plt.hist(targets, BINS, alpha=0.5, label='targets')
@@ -76,6 +73,7 @@ def run_test(hypes, image_pl, sess, output_node, eval_list, dataset, validation=
 
     plotfile = os.path.join(val_path, 'targets_vs_predictions_scatter_step_%d.png' % step)
     plt.clf()
+    plt.title('Step %d' % step, loc='left')
     start = - np.pi
     end = np.pi
     plt.scatter(targets, preds, s=10)
@@ -86,6 +84,7 @@ def run_test(hypes, image_pl, sess, output_node, eval_list, dataset, validation=
 
     plotfile = os.path.join(val_path, 'angles_vs_error_scatter_step_%d.png' % step)
     plt.clf()
+    plt.title('Step %d' % step, loc='left')
     plt.scatter(targets, error, s=10)
     plt.xlabel('Angle')
     plt.ylabel('Errors')

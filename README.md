@@ -9,9 +9,8 @@ Install all dependencies with:
 $ pip install -r requirements.txt
 ```
 
-This project utilize [TensorKit](https://github.com/nghiattran/tensorkit).
-
-Run following command to install TensorKit directly from Github:
+This project is built on top of [TensorKit](https://github.com/nghiattran/tensorkit) which helps organizing 
+experiments.
 
 ```bash
 pip install https://github.com/nghiattran/tensorkit/archive/master.zip
@@ -21,7 +20,9 @@ Also, make sure you have Tensorflow above 1.0.
 
 ## Usage
 
-### 1. Training
+Check [Hypes](https://github.com/nghiattran/self-steering/blob/master/models/nvidia/hypes.json) to see all options or to create your own ones.
+
+### 1. TensorKit
 
 You can train your own model by using.
 
@@ -29,29 +30,20 @@ You can train your own model by using.
 $ tk-train path-to-your-hype
 ```
 
-See [train.py](https://github.com/nghiattran/self-steering/blob/master/train.py) for more detail.
-
-Check [Hypes](#hypes) to see all options or to create your own ones.
-
-### 2. TensorVision
-
-This project is built on top of [TensorVision](http://tensorvision.readthedocs.io/en/master/) which helps organizing 
-experiments.
-
-There are times that training process is interupted due to unexpected reasons. In this case, you can resume training by 
-using `tv-continue`.
+There are times that training process is interrupted due to unexpected reasons. In this case, you can resume training by 
+using `tk-continue`.
 
 ```bash
 $ tk-continue path-to-logdir
 ```
 
-To evaluate trained model on valuation set, you can use `tv-analyze`.
+To evaluate trained model on valuation set, you can use `tk-evaluate`.
 
 ```bash
 $ tk-evaluate path-to-logdir
 ```
 
-### 3. Submission
+### 2. Submission
 
 To test your model, use `submission.py` to generate csv file. Format of this `csv` file would be similar to [CH2_final_evaluation.csv](https://github.com/nghiattran/self-steering/blob/master/CH2_final_evaluation.csv).
 
@@ -61,7 +53,7 @@ $ python submission.py path-to-logdir path-image-folder
 
 See [submission.py](https://github.com/nghiattran/self-steering/blob/master/submission.py) for more detail.
 
-### 4. Visualization
+### 3. Visualization
 
 Use `visualize.py` to create a demo video from `csv` files generated above. 
 
@@ -104,13 +96,18 @@ See [visualize.py](https://github.com/nghiattran/self-steering/blob/master/visua
 
 #### Usage
 
-To fine-tune, you only need to change `learning_rate`, `opt`, and `max_steps` in `solver` and a few other
+To fine-tune, you only need to change `learning_rate`, `opt`, and `max_steps` in `solver` and other
  hyperparameters like `reg_strength`, `color_space`, `crop`,...
  
-You can also create your own neural network architect by using layout in `architecture/nvidia.py` and keep
+You can also create your own neural network architect by using layout in `model/nvidia/architect.py` and keep
  other parameter as is.
  
 ## Models
 
 * `nvidia`: inspired by [SullyChen](https://github.com/SullyChen/Autopilot-TensorFlow)'s implementation of Nvidia's paper
  [End to End Learning for Self-Driving Cars](https://arxiv.org/pdf/1604.07316.pdf) but our implementation runs way faster.
+
+* `rambo`: inspired by [rambo team](https://github.com/udacity/self-driving-car/tree/master/steering-models/community-models/rambo)'s
+submission.
+
+NOTE: All models in this project are similar but not identical to what they are based on.
