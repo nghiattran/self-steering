@@ -9,6 +9,14 @@ Install all dependencies with:
 $ pip install -r requirements.txt
 ```
 
+This project utilize [TensorKit](https://github.com/nghiattran/tensorkit).
+
+Run following command to install TensorKit directly from Github:
+
+```bash
+pip install https://github.com/nghiattran/tensorkit/archive/master.zip
+```
+
 Also, make sure you have Tensorflow above 1.0.
 
 ## Usage
@@ -18,7 +26,7 @@ Also, make sure you have Tensorflow above 1.0.
 You can train your own model by using.
 
 ```bash
-$ python train.py --hypes path-to-your-hype
+$ tk-train path-to-your-hype
 ```
 
 See [train.py](https://github.com/nghiattran/self-steering/blob/master/train.py) for more detail.
@@ -34,13 +42,13 @@ There are times that training process is interupted due to unexpected reasons. I
 using `tv-continue`.
 
 ```bash
-$ tv-continue --logdir path-to-logdir
+$ tk-continue path-to-logdir
 ```
 
 To evaluate trained model on valuation set, you can use `tv-analyze`.
 
 ```bash
-$ tv-analyze --logdir path-to-logdir
+$ tk-evaluate path-to-logdir
 ```
 
 ### 3. Submission
@@ -68,17 +76,17 @@ See [visualize.py](https://github.com/nghiattran/self-steering/blob/master/visua
 #### Options:
 
 * `model`:
-    * `input_file`: path to python file that handles input.
-    * `architecture`: path to python file that constructs main graph.
+    * `dataset_file`: path to python file that handles input.
+    * `architecture_file`: path to python file that constructs main graph.
     * `objective_file`: path to python file that handles losses.
-    * `evaluator_file`: path to python file that handles avaluation.
+    * `optimizer_file`: path to python file that handles updating variables.
+    * `evaluator_file`: path to python file that handles validation.
 * `data`:
-    * `train_file`: path to `train.csv`
-    * `val_file`: path to `val.csv`
+    * `train_file`: path to training data file.
+    * `val_file`: path to validation data file.
 * `logging`:
     * `display_iter`: display frequency.
-    * `eval_iter`: evaluatoion frequency.
-    * `write_iter`: writing summary for Tensorboard frequency.
+    * `eval_iter`: validation frequency.
     * `save_iter`: saving model frequency.
 * `solver`:
     * `opt`: type of optimizer. Supported `Adam`, `RMS`, and `SGD`. 
@@ -86,10 +94,10 @@ See [visualize.py](https://github.com/nghiattran/self-steering/blob/master/visua
     * `epsilon`: value for epsilon (a small number that is used to avoid zero division).
     * `learning_rate`
     * `max_steps`
-* `clip_norm`: upper bound to avoid gradient exploding. 
+    * `batch_size`
+* `clip_norm`: upper bound for gradients to avoid gradient exploding. 
 * `image_height`
 * `image_width`
-* `batch_size`
 * `reg_strength`: regularization strength.
 * `color_space`: image preprocessing color space. Supported `rgb` and `yuv`. Default `rgb`.
 * `crop`: crop size. This value count from bottom to top.
@@ -106,9 +114,3 @@ You can also create your own neural network architect by using layout in `archit
 
 * `nvidia`: inspired by [SullyChen](https://github.com/SullyChen/Autopilot-TensorFlow)'s implementation of Nvidia's paper
  [End to End Learning for Self-Driving Cars](https://arxiv.org/pdf/1604.07316.pdf) but our implementation runs way faster.
-
-## Acknowledge
-
-This project uses similar layout as in [MarvinTeichmann](https://github.com/MarvinTeichmann)'s 
-[KittiBox](https://github.com/MarvinTeichmann/KittiBox). Especially, `generic_optimizer.py` and 
-`udacity_input.py`.
