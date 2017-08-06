@@ -2,25 +2,31 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from tensorflow.python.ops.image_ops_impl import ResizeMethod, _Check3DImage, fix_image_flip_shape
 from tensorkit.base import DatasetBase, DatasetsBase
 import tensorflow as tf
+from tensorflow.python.framework import ops
+from tensorflow.python.ops import random_ops
+from tensorflow.python.ops import math_ops
+from tensorflow.python.ops import control_flow_ops
+from tensorflow.python.ops import array_ops
 
 
-def decode_jpeg(image_buffer, scope=None):
+def decode_jpeg(image, scope=None):
   """Decode a JPEG string into one 3-D float image Tensor.
   Args:
-    image_buffer: scalar string Tensor.
+    image: scalar string Tensor.
     scope: Optional scope for name_scope.
   Returns:
     3-D float Tensor with values ranging from [0, 1).
   """
-  with tf.name_scope(values=[image_buffer], name=scope,
+  with tf.name_scope(values=[image], name=scope,
                      default_name='decode_jpeg'):
     # Decode the string as an RGB JPEG.
     # Note that the resulting image contains an unknown height and width
     # that is set dynamically by decode_jpeg. In other words, the height
     # and width of image is unknown at compile-time.
-    image = tf.image.decode_jpeg(image_buffer, channels=3)
+    image = tf.image.decode_jpeg(image, channels=3)
 
     # After this point, all image pixels reside in [0,1)
     # until the very end, when they're rescaled to (-1, 1).  The various
@@ -47,46 +53,79 @@ def parse_example_proto(serialized_example, hypes):
     crop = hypes.get('crop', 400)
     if crop > 0:
         image = image[-crop:]
-        image = tf.image.resize_images(image,
-                                       size=(hypes['image_height'], hypes['image_width']))
 
     return image, label, frame_id
 
+def resize(image, thread_id, hypes, is_train):
+    resize_method = thread_id % 4 if is_train else ResizeMethod.BICUBIC
+    
+    image = tf.image.resize_images(image,
+                                   size=(hypes['image_height'], hypes['image_width']),
+                                   method=resize_method)
+    return image
 
-def image_preprocessing(image_buffer, label, thread_id, hypes, is_train):
-    distored_image = image_buffer
+def distort_image(image, thread_id, hypes):
+    with tf.name_scope('Distort_image'):
+        augment_level = hypes.get('augment_level', -1)
+        if augment_level == 0:
+            image = tf.image.random_brightness(image, max_delta=30)
+            image = tf.image.random_contrast(image, lower=0.75, upper=1.25)
+        elif augment_level == 1:
+            image = tf.image.random_saturation(image, lower=0.5, upper=1.6)
+            image = tf.image.random_hue(image, max_delta=0.15)
+        elif augment_level == 2:
+            color_ordering = thread_id % 3
+
+            if color_ordering == 0:
+                image = tf.image.random_brightness(image, max_delta=32. / 255.)
+                image = tf.image.random_saturation(image, lower=0.5, upper=1.5)
+                image = tf.image.random_hue(image, max_delta=0.2)
+                image = tf.image.random_contrast(image, lower=0.5, upper=1.5)
+            elif color_ordering == 1:
+                image = tf.image.random_brightness(image, max_delta=32. / 255.)
+                image = tf.image.random_contrast(image, lower=0.5, upper=1.5)
+                image = tf.image.random_saturation(image, lower=0.5, upper=1.5)
+                image = tf.image.random_hue(image, max_delta=0.2)
+
+        image = tf.clip_by_value(image, 0.0, 1.0)
+
+    return image
+
+def image_preprocessing(image, label, thread_id, hypes, is_train, seed=None):
+    image = resize(image, thread_id, hypes, is_train)
+
     if is_train:
-        with tf.name_scope('Distort_image'):
-            augment_level = hypes.get('augment_level', -1)
-            if augment_level == 0:
-                distored_image = tf.image.random_brightness(distored_image, max_delta=30)
-                distored_image = tf.image.random_contrast(distored_image, lower=0.75, upper=1.25)
-            elif augment_level == 1:
-                distored_image = tf.image.random_saturation(distored_image, lower=0.5, upper=1.6)
-                distored_image = tf.image.random_hue(distored_image, max_delta=0.15)
-            elif augment_level == 2:
-                color_ordering = thread_id % 2
+        image = distort_image(image, thread_id, hypes)
 
-                if color_ordering == 0:
-                    distored_image = tf.image.random_brightness(distored_image, max_delta=32. / 255.)
-                    distored_image = tf.image.random_saturation(distored_image, lower=0.5, upper=1.5)
-                    distored_image = tf.image.random_hue(distored_image, max_delta=0.2)
-                    distored_image = tf.image.random_contrast(distored_image, lower=0.5, upper=1.5)
-                elif color_ordering == 1:
-                    distored_image = tf.image.random_brightness(distored_image, max_delta=32. / 255.)
-                    distored_image = tf.image.random_contrast(distored_image, lower=0.5, upper=1.5)
-                    distored_image = tf.image.random_saturation(distored_image, lower=0.5, upper=1.5)
-                    distored_image = tf.image.random_hue(distored_image, max_delta=0.2)
+        with tf.name_scope('Random_flip'):
+            # Check image's dimension and generate random variable
+            image = ops.convert_to_tensor(image, name='image')
+            _Check3DImage(image, require_static=False)
+            uniform_random = random_ops.random_uniform([], 0, 1.0, seed=seed)
+            mirror_cond = math_ops.less(uniform_random, .5)
 
-            distored_image = tf.clip_by_value(distored_image, 0.0, 1.0)
+            # Flip image
+            image_result = control_flow_ops.cond(mirror_cond,
+                                                 lambda: array_ops.reverse(image, [1]),
+                                                 lambda: image)
+            image = fix_image_flip_shape(image, image_result)
 
-    return distored_image, label
+            # Flip steering angle
+            label_result = control_flow_ops.cond(mirror_cond,
+                                                 lambda: -label,
+                                                 lambda: label)
+            result_shape = label.get_shape()
+            label_result.set_shape(result_shape)
+            label = label_result
+
+    return image, label
 
 
 class Dataset(DatasetBase):
     def __init__(self, record_file, hypes, is_train):
         self.hypes = hypes
 
+        # Count number of sample in record file
         cnt = 0
         for _ in tf.python_io.tf_record_iterator(record_file):
             cnt += 1
@@ -108,8 +147,8 @@ class Dataset(DatasetBase):
                 for thread_id in range(num_threads):
                     with tf.name_scope('Thread_process_%d' % thread_id):
                         # Parse a serialized Example proto to extract the image and metadata.
-                        image_buffer, label, frame_id = parse_example_proto(serialized_example, hypes)
-                        image, label = image_preprocessing(image_buffer=image_buffer,
+                        image, label, frame_id = parse_example_proto(serialized_example, hypes)
+                        image, label = image_preprocessing(image=image,
                                                            label=label,
                                                            thread_id=thread_id,
                                                            hypes=hypes,
@@ -117,15 +156,17 @@ class Dataset(DatasetBase):
                         images_and_labels.append([image, label])
 
                     if thread_id == 0:
-                        self.image = image_buffer
+                        self.image = image
                         self.label = label
                         self.frame_id = frame_id
+
+                memory_factor = hypes.get('memory_factor', 2) if is_train else 2
 
                 self.images, self.labels = tf.train.shuffle_batch_join(
                     images_and_labels,
                     batch_size=batch_size,
                     min_after_dequeue=num_threads * batch_size,
-                    capacity=2 * num_threads * batch_size)
+                    capacity=memory_factor * num_threads * batch_size)
 
 
     def get_frame_id(self, index):

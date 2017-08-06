@@ -12,7 +12,7 @@ class VariableHandler():
     def __init__(self):
         self.cnt = 0
 
-    def weight_variable(self, shape, is_summary=False):
+    def weight_variable(self, shape):
         weight_name = 'weight_%d' % (self.cnt)
         bias_name = 'bias_%d' % (self.cnt)
 
@@ -27,9 +27,9 @@ class VariableHandler():
             summary[bias_name] = b
             summary[weight_name] = w
 
-            if is_summary:
-                tf.summary.scalar('%s_sparsity' % weight_name, tf.nn.zero_fraction(w))
-                tf.summary.scalar('%s_sparsity' % bias_name, tf.nn.zero_fraction(b))
+            tf.summary.scalar('%s_sparsity' % weight_name, tf.nn.zero_fraction(w))
+            tf.summary.scalar('%s_sparsity' % bias_name, tf.nn.zero_fraction(b))
+
         self.cnt += 1
 
         return w, b
@@ -76,7 +76,7 @@ class Architect(ArchitectBase):
             # If val, set to 1.0 which mean no dropout
             keep_prob = hypes.get('keep_prob', 1.0) if is_training else 1.0
 
-            with tf.name_scope('conv1'):
+            with tf.name_scope("conv1"):
                 conv1_w, conv1_b = vh.weight_variable([5, 5, 3, 24])
                 h_conv1 = tf.nn.relu(conv2d(images, conv1_w, 2) + conv1_b)
 
@@ -86,35 +86,32 @@ class Architect(ArchitectBase):
                     max_outputs=1
                 )
 
-                activation = h_conv1[0]
-                h, w, c = activation.get_shape().as_list()
-                feature_map = tf.transpose(activation,
-                                           perm=(2, 0, 1))
-                feature_map = tf.reshape(feature_map, shape=(c, h, w, 1))
+                h, w, c = h_conv1[0].get_shape().as_list()
+                feature_space = tf.reshape(h_conv1[0], shape=(c, h, w, 1))
                 tf.summary.image(
-                    name='fist_layer_feature_map',
-                    tensor=feature_map,
+                    name='fist_layer_activation',
+                    tensor=feature_space,
                     max_outputs=c
                 )
 
-            with tf.name_scope('conv2'):
+            with tf.name_scope("conv2"):
                 conv2_w, conv2_b = vh.weight_variable([5, 5, 24, 36])
                 h_conv2 = tf.nn.relu(conv2d(h_conv1, conv2_w, 2) + conv2_b)
 
-            with tf.name_scope('conv3'):
+            with tf.name_scope("conv3"):
                 conv3_w, conv3_b = vh.weight_variable([5, 5, 36, 48])
                 h_conv3 = tf.nn.relu(conv2d(h_conv2, conv3_w, 2) + conv3_b)
 
-            with tf.name_scope('conv4'):
+            with tf.name_scope("conv4"):
                 conv4_w, conv4_b = vh.weight_variable([3, 3, 48, 64])
                 h_conv4 = tf.nn.relu(conv2d(h_conv3, conv4_w, 1) + conv4_b)
 
-            with tf.name_scope('conv5'):
+            with tf.name_scope("conv5"):
                 conv5_w, conv5_b = vh.weight_variable([3, 3, 64, 64])
 
                 h_conv5 = tf.nn.relu(conv2d(h_conv4, conv5_w, 1) + conv5_b)
 
-            with tf.name_scope('fc6'):
+            with tf.name_scope("fc6"):
                 fc6_w, fc6_b = vh.weight_variable([1152, 1164])
 
                 h_conv5_flat = tf.reshape(h_conv5, [-1, 1152])
@@ -122,19 +119,19 @@ class Architect(ArchitectBase):
 
                 h_fc6_drop = tf.nn.dropout(h_fc6, keep_prob=keep_prob)
 
-            with tf.name_scope('fc7'):
+            with tf.name_scope("fc7"):
                 fc7_w, f7_b = vh.weight_variable([1164, 100])
                 h_fc7 = tf.nn.relu(tf.matmul(h_fc6_drop, fc7_w) + f7_b)
 
                 h_fc7_drop = tf.nn.dropout(h_fc7, keep_prob=keep_prob)
 
-            with tf.name_scope('fc8'):
+            with tf.name_scope("fc8"):
                 fc8_w, f8_b = vh.weight_variable([100, 50])
                 h_fc8 = tf.nn.relu(tf.matmul(h_fc7_drop, fc8_w) + f8_b)
 
                 h_fc8_drop = tf.nn.dropout(h_fc8, keep_prob=keep_prob)
 
-            with tf.name_scope('fc9'):
+            with tf.name_scope("fc9"):
                 fc9_w, f9_b = vh.weight_variable([50, 10])
                 h_fc9 = tf.nn.relu(tf.matmul(h_fc8_drop, fc9_w) + f9_b)
 

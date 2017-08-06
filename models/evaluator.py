@@ -4,16 +4,13 @@ from __future__ import print_function
 
 from tensorkit.base import EvaluatorBase
 import os
-import random
 import time
-import pandas as pd
-import scipy as scp
 import numpy as np
 import matplotlib.pyplot as plt
 
 
-BINS = np.linspace(-2, 2, 100)
-
+BINS = np.linspace(-3, 3, 100)
+POS_BINS = np.linspace(0, 3, 20)
 
 def make_val_dir(hypes, validation=True):
     if validation:
@@ -82,12 +79,12 @@ def run_test(hypes, image_pl, sess, output_node, eval_list, dataset, validation=
     plt.plot([start, end], [start, end], color='red')
     plt.savefig(plotfile)
 
-    plotfile = os.path.join(val_path, 'angles_vs_error_scatter_step_%d.png' % step)
+    plotfile = os.path.join(val_path, 'error_histogram_step_%d.png' % step)
     plt.clf()
     plt.title('Step %d' % step, loc='left')
-    plt.scatter(targets, error, s=10)
-    plt.xlabel('Angle')
-    plt.ylabel('Errors')
+    plt.xlabel('Error')
+    plt.ylabel('Frequency')
+    plt.hist(error, POS_BINS, label='error')
     plt.savefig(plotfile)
 
     return eval_list, feed

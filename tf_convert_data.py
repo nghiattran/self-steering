@@ -31,7 +31,6 @@ if __name__ == '__main__':
     with open(filepath, 'r') as f:
         data = f.readlines()[1:]
 
-
     with tf.python_io.TFRecordWriter(tf_filename) as tfrecord_writer:
         for i, entry in enumerate(data):
             sys.stdout.write('\r>> Converting image %d/%d' % (i + 1, len(data)))

@@ -32,33 +32,39 @@ import argparse
 import os
 import sys
 import logging
-from inputs.udacity_input import load_image
+from tensorkit.model import Model
+from models.dataset import Dataset
+import scipy.misc
+import tensorflow as tf
 
+def load_image(path, hypes):
+    img = scipy.misc.imread(path)
 
-def load(logdir):
+    crop = hypes.get('crop', 300)
+    if crop > 0:
+        img = img[-crop:]
+
+    img = scipy.misc.imresize(img,
+                              interp='bicubic',
+                              size=(hypes['image_height'], hypes['image_width'], 3))
+    img = img / 255.0
+
+    return img
+
+def load(logdir, args):
     import tensorflow as tf
-    import tensorvision.utils as tv_utils
-    import tensorvision.core as core
 
-    tv_utils.set_gpus_to_use()
-
-    # Loading hyperparameters from logdir
-    hypes = tv_utils.load_hypes_from_logdir(logdir, base_path='hypes')
-
-    logging.info("Hypes loaded successfully.")
-
-    # Loading tv modules (encoder.py, decoder.py, eval.py) from logdir
-    modules = tv_utils.load_modules_from_logdir(logdir)
-    logging.info("Modules loaded successfully. Starting to build tf graph.")
-
+    model = Model(logdir)
+    hypes = model.hypes
     with tf.Graph().as_default():
         # Create placeholder for input
-        image_pl = tf.placeholder(tf.float32, shape=(hypes["image_height"], hypes["image_width"], 3))
-        image = tf.expand_dims(image_pl, 0)
-        # build Tensorflow graph using the model from logdir
-        prediction = core.build_inference_graph(hypes, modules,
-                                                image=image)
+        image_pl = tf.placeholder(tf.float32)
 
+        dataset = Dataset(record_file=args.record,
+                          hypes=hypes,
+                          is_train=False)
+
+        res = model.build_inference_graph(hypes, input_pl=dataset.image)
         logging.info("Graph build successfully.")
 
         # Create a session for running Ops on the Graph.
@@ -66,11 +72,10 @@ def load(logdir):
         saver = tf.train.Saver()
 
         # Load weights from logdir
-        core.load_weights(logdir, sess, saver)
-
+        model.load_weights(logdir, sess, saver)
         logging.info("Weights loaded successfully.")
 
-    return image_pl, prediction, sess, hypes
+    return dataset, sess, hypes
 
 
 def main():
@@ -80,13 +85,13 @@ def main():
 
     parser = argparse.ArgumentParser(description='Create submission for Udacity.')
     parser.add_argument('logdir', type=str, help='Path to logdir.')
-    parser.add_argument('test_folder', type=str, help='Path to test folder.')
+    parser.add_argument('record', type=str, help='Path to tfrecord file.')
     parser.add_argument('--limit', '-l', type=int, default=-1, help='Number of files.')
     parser.add_argument('--save', '-s', type=str, default='submission.csv', help='Save file.')
 
     args = parser.parse_args()
     logdir = args.logdir
-    image_pl, prediction, sess, hypes = load(logdir)
+    dataset, sess, hypes = load(logdir, args)
 
     save_file = args.save
     files = sorted(os.listdir(args.test_folder))[:args.limit]
@@ -94,6 +99,9 @@ def main():
     if len(files) == 0:
         logging.warning('No image found at path %s' % args.test_folder)
         exit(1)
+
+    coord = tf.train.Coordinator()
+    threads = tf.train.start_queue_runners(coord=coord)
 
     start = time.time()
     with open(save_file, 'w') as f:
@@ -105,15 +113,17 @@ def main():
             filepath = os.path.join(args.test_folder, file)
 
             img = load_image(path=filepath, hypes=hypes)
-            feed = {image_pl: img}
 
-            output = prediction['output']
             pred = sess.run(output,
                             feed_dict=feed)
             pred = pred[0][0]
 
             frame_id = os.path.splitext(file)[0]
             f.write('%s,%f\n' % (frame_id, pred))
+    sess.close()
+
+    coord.request_stop()
+    coord.join(threads)
 
     time_taken = time.time() - start
     logging.info('Video saved as %s' % save_file)
